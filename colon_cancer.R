@@ -42,7 +42,8 @@ colon_cancer_mb_cpm.df <- read.table(file = "../coadread_tcga_pan_can_atlas_2018
                                      sep = "\t",
                                      header = T,
                                      quote ="",
-                                     comment.char = "#")
+                                     comment.char = "#",
+                                     as.is = T)
 
 colon_cancer_patient.metadata <- read.table("../coadread_tcga_pan_can_atlas_2018/data_clinical_patient.txt",
                                        row.names = 1,
@@ -60,3 +61,72 @@ colon_cancer_sample.metadata <- read.table("../coadread_tcga_pan_can_atlas_2018/
                                            header = T,
                                            quote ="",
                                            comment.char = "#")
+
+
+# ANALYSIS: DATA WRANGLE ------------------------------------------------------
+
+# Are all samples in both files?
+all(rownames(colon_cancer_patient.metadata) %in%
+      rownames(colon_cancer_sample.metadata))
+
+
+# Are all samples in the same order in both files?
+all(rownames(colon_cancer_patient.metadata) ==
+      rownames(colon_cancer_sample.metadata))
+
+#df[rows,cols]
+#must include both rows and columns to reorder
+
+colon_cancer_patient.metadata <-
+  colon_cancer_patient.metadata[rownames(colon_cancer_sample.metadata),]
+
+# Are all samples in the same order in both files?
+all(rownames(colon_cancer_patient.metadata) ==
+      rownames(colon_cancer_sample.metadata))
+
+
+#fix colon_cancer_mb_cpm.df colnames to match metadata rownames
+# don't forget to escape wildcard char "." !
+
+colnames(colon_cancer_mb_cpm.df) <-
+  gsub(x = colnames(colon_cancer_mb_cpm.df), pattern = "\\.", "-")
+
+#see if any sample names match
+colnames(colon_cancer_mb_cpm.df)[5:587] %in% rownames(colon_cancer_patient.metadata)
+
+#replace trailing -01 and see if any sample names match
+
+all(gsub(x = colnames(colon_cancer_mb_cpm.df), pattern = "-01", "")[5:587] %in%  rownames(colon_cancer_patient.metadata))
+
+#fix colnames again
+colnames(colon_cancer_mb_cpm.df) <-
+  gsub(x = colnames(colon_cancer_mb_cpm.df), pattern = "-01", "")
+
+#filter metadata
+
+colon_cancer_patient.metadata <-
+  colon_cancer_patient.metadata[which(rownames(colon_cancer_patient.metadata) %in%
+                                      colnames(colon_cancer_mb_cpm.df)),]
+
+
+colon_cancer_sample.metadata <-
+  colon_cancer_sample.metadata[which(rownames(colon_cancer_sample.metadata) %in%
+                                        colnames(colon_cancer_mb_cpm.df)),]
+
+#order metadata
+colon_cancer_patient.metadata <-
+  colon_cancer_patient.metadata[colnames(colon_cancer_mb_cpm.df)[5:587],]
+
+
+colon_cancer_sample.metadata <-
+  colon_cancer_sample.metadata[colnames(colon_cancer_mb_cpm.df)[5:587],]
+
+all(rownames(colon_cancer_sample.metadata) == colnames(colon_cancer_mb_cpm.df)[5:587])
+all(rownames(colon_cancer_patient.metadata) == colnames(colon_cancer_mb_cpm.df)[5:587])
+
+
+# ANALYSIS: Viz -----------------------------------------------------------
+
+hist(colon_cancer_patient.metadata$AGE)
+table(colon_cancer_patient.metadata$RACE)
+

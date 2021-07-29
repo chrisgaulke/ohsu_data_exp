@@ -33,7 +33,7 @@
 options(stringsAsFactors = F)
 library(ggplot2)
 library(vegan)
-#library(randomForest)
+library(randomForest)
 
 # DATA: IMPORT DATA -------------------------------------------------------
 
@@ -124,9 +124,62 @@ colon_cancer_sample.metadata <-
 all(rownames(colon_cancer_sample.metadata) == colnames(colon_cancer_mb_cpm.df)[5:587])
 all(rownames(colon_cancer_patient.metadata) == colnames(colon_cancer_mb_cpm.df)[5:587])
 
+#now lets make a data frame without those pesky extra columns
 
-# ANALYSIS: Viz -----------------------------------------------------------
+rf.cancer <- colon_cancer_mb_cpm.df
+#make sensible row names
+rownames(rf.cancer) <- rf.cancer$ENTITY_STABLE_ID
+
+#remove non numeric tax column
+rf.cancer <- rf.cancer[,5:587]
+
+#transpose table so columns are now rows to facilitate analysis downstream
+rf.cancer <- t(rf.cancer)
+
+#always double check!
+all(rownames(colon_cancer_patient.metadata) == rownames(rf.cancer))
+
+
+# ANALYSIS: AGE -----------------------------------------------------------
+
+#Lets looks to see how age of diagnosis is distributed in these data
+#recall from the full metadata file that "AGE" is actually age of diagnosis
+#For now we will assume all of these samples have cancer
 
 hist(colon_cancer_patient.metadata$AGE)
-table(colon_cancer_patient.metadata$RACE)
 
+#lets also sweep out some summary stats here
+
+mean(colon_cancer_patient.metadata$AGE)
+
+#Get tukeys five number summary of data. This will include (in this order)
+#the minimum, lower-hinge, median, upper-hinge, and the maximum
+fivenum(colon_cancer_patient.metadata$AGE)
+
+#Now we can set up tentative age bins
+#early < 60 ; normal 60 - 70; late > 70
+
+colon_cancer_patient.metadata$GROUP <-
+
+  factor(
+
+    cut(
+      colon_cancer_patient.metadata$AGE, c(0,60,70,100)
+      )
+
+    )
+
+#now make these numbers more readable
+levels(colon_cancer_patient.metadata$GROUP) <- c("0-60", "61-70", ">70")
+
+#cut can be tricky so always check to make sure things are as you want them
+
+View(colon_cancer_patient.metadata[,c("AGE", "GROUP")])
+
+#now lets take a look at how many samples are in each group
+table(colon_cancer_patient.metadata$GROUP)
+
+#finally lets looks to see how well a classifier does at binning colon cancer
+#patients
+
+randomForest(y = colon_cancer_patient.metadata$GROUP, x = rf.cancer)

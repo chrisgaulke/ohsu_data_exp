@@ -273,13 +273,17 @@ cancer_prcomp_age.plot +
 
 #adonis note because these data are prenormalized we will get a warning here
 #we should approach this result with skepticism.
+set.seed(731)
+
 cancer_age.adonis <- adonis(rf.cancer ~ colon_cancer_patient.metadata$GROUP, permutations = 1000)
 cancer_age_C7.adonis <- adonis(rf.cancer ~ colon_cancer_patient.metadata$C7, permutations = 1000)
 cancer_age_CFD.adonis <- adonis(rf.cancer ~ colon_cancer_patient.metadata$CFD, permutations = 1000)
+cancer_age_center.adonis <- adonis(rf.cancer ~ colon_cancer_patient.metadata$CENTER, permutations = 1000)
 
 cancer_age.adonis #not sig
 cancer_age_C7.adonis #sig
 cancer_age_CFD.adonis #sig
+cancer_age_center.adonis #sig
 
 #Since we can't trust adonis but together with the PCA it seems like there may
 # be an association between C7 or CFD and the microbiome we can try to determine
@@ -287,6 +291,7 @@ cancer_age_CFD.adonis #sig
 # ordination. We can do this with a simple cor.test or with envfit. We will try
 # both here
 
+set.seed(731)
 cancer_metadata.envfit <- envfit(cancer.prcomp,
                         colon_cancer_patient.metadata[,c("GROUP",
                                                          "C7",
@@ -298,7 +303,7 @@ cancer_metadata.envfit <- envfit(cancer.prcomp,
 
 cancer_metadata.envfit
 
-#we can also just use independent correlations with the different PCs we will
+# we can also just use independent correlations with the different PCs we will
 # limit this to the first three dims
 
 cor.test(cancer_prcomp.df$PC1,cancer_prcomp.df$C7, method = "spearman")# n.s

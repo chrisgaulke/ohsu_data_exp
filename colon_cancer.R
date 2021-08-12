@@ -285,7 +285,7 @@ cancer_age_C7.adonis #sig
 cancer_age_CFD.adonis #sig
 cancer_age_center.adonis #sig
 
-#Since we can't trust adonis but together with the PCA it seems like there may
+# Since we can't trust adonis but together with the PCA it seems like there may
 # be an association between C7 or CFD and the microbiome we can try to determine
 # if the vector of gene expression values correlate with the dimensions of the
 # ordination. We can do this with a simple cor.test or with envfit. We will try
@@ -329,3 +329,46 @@ age.rf
 #classifier does pretty awful. The OOB error is high and the class error is
 #~1 for two groups. This would suggest that there aren't strong differences
 # between age groups with regard to microbiome composition.
+
+
+
+# ANALYSIS: Correlation ---------------------------------------------------
+
+# Calc corrs between CFD, C7, and all taxa abundances.
+
+#CFD
+cancer_cors <- NULL
+cancer_cors$CFD <- NULL
+
+for(i in colnames(rf.cancer)){
+  cancer_cors$CFD[[i]] <- cor.test(rf.cancer[,i],
+                                   colon_cancer_patient.metadata$CFD,
+                                   method = "spearman")
+}
+
+
+cors.cfd <- NULL
+cors.cfd$stat <- sapply(cancer_cors$CFD, function(x) { x$statistic}) # W
+cors.cfd$estimate <- sapply(cancer_cors$CFD, function(x) { x$estimate}) # rho
+cors.cfd$pval <- sapply(cancer_cors$CFD, function(x) { x$p.value}) # pval
+cors.cfd$qval <- qvalue::qvalue(cors.cfd$pval)$qvalue # false discovery rate control
+cors.cfd <- as.data.frame(cors.cfd)
+
+#C7
+
+cancer_cors$C7 <- NULL
+
+for(i in colnames(rf.cancer)){
+  cancer_cors$C7[[i]] <- cor.test(rf.cancer[,i],
+                                  colon_cancer_patient.metadata$C7,
+                                  method = "spearman")
+}
+
+
+cors.C7 <- NULL
+cors.C7$stat <- sapply(cancer_cors$C7, function(x) { x$statistic}) # W
+cors.C7$estimate <- sapply(cancer_cors$C7, function(x) { x$estimate}) # rho
+cors.C7$pval <- sapply(cancer_cors$C7, function(x) { x$p.value}) # pval
+cors.C7$qval <- qvalue::qvalue(cors.C7$pval)$qvalue # false discovery rate control
+cors.C7 <- as.data.frame(cors.C7)
+

@@ -371,4 +371,4 @@ cors.C7$estimate <- sapply(cancer_cors$C7, function(x) { x$estimate}) # rho
 cors.C7$pval <- sapply(cancer_cors$C7, function(x) { x$p.value}) # pval
 cors.C7$qval <- qvalue::qvalue(cors.C7$pval)$qvalue # false discovery rate control
 cors.C7 <- as.data.frame(cors.C7)
-
+#View(cors.C7)
